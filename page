@@ -1,0 +1,44 @@
+export default function Home() {
+  return (
+    <main style={{
+      minHeight: "100vh",
+      background: "#0b0b0b",
+      color: "#f5d47e",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px"
+    }}>
+      <div style={{maxWidth: 780, lineHeight: 1.4}}>
+        <h1 style={{fontSize: 42, margin: "0 0 10px", letterSpacing: 0.5}}>
+          Curiosa — Care Label Generator
+        </h1>
+        <p style={{fontSize: 18, color: "#f7e8b8", margin: "0 0 24px"}}>
+          Type your product details, pick a care preset, and download a print-ready SVG label.
+        </p>
+
+        <ul style={{margin: "0 0 24px", paddingLeft: 18}}>
+          <li>Supplier-ready vector SVG</li>
+          <li>Presets (Delicates, Hoodie, Activewear…)</li>
+          <li>A4 sheet or single label (start with single)</li>
+        </ul>
+
+        <a href="/label" style={{
+          display: "inline-block",
+          background: "#f5d47e",
+          color: "#0b0b0b",
+          padding: "12px 18px",
+          borderRadius: 8,
+          fontWeight: 700,
+          textDecoration: "none"
+        }}>
+          Open Label Maker
+        </a>
+
+        <div style={{marginTop: 28, fontSize: 13, color: "#c7b16a"}}>
+          Tip: this is an MVP. We’ll add login, plans & PDF later.
+        </div>
+      </div>
+    </main>
+  );
+}
