@@ -1,0 +1,139 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Form = {
+  brand: string;
+  product: string;
+  size: string;
+  composition: string;
+  coo: string;
+  preset: string;
+};
+
+const PRESETS: Record<string, string[]> = {
+  "Delicates 30°C": ["Wash at 30°C (delicates)", "Do not tumble dry", "Mild detergent", "Wash inside out", "Do not bleach", "Iron low"],
+  "Hoodie everyday": ["Wash at 30–40°C", "Tumble dry low (if needed)", "Do not bleach", "Iron medium", "Wash with similar colours"],
+  "Activewear quick-dry": ["Cold wash", "Do not tumble dry", "Do not iron", "Do not bleach", "Line dry", "No fabric softener"],
+  "Wool": ["Hand wash cold", "Dry flat", "Do not tumble dry", "Do not bleach", "Iron low with cloth"],
+  "Kidswear UK": ["Wash at 40°C", "Keep away from fire", "Do not bleach", "Tumble dry low", "Iron medium"]
+};
+
+function renderSVG(d: Form, careLines: string[]) {
+  const W = 380, H = 240;
+  const t = (x:number,y:number,txt:string,fs=12,fw="normal") =>
+    `<text x="${x}" y="${y}" font-family="Inter, Arial, Helvetica, sans-serif" font-size="${fs}" font-weight="${fw}">${txt.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</text>`;
+  let y = 22, x = 16;
+  const lines = [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">`,
+    `<rect width="100%" height="100%" fill="#fff"/>`,
+    `<rect x="1" y="1" width="${W-2}" height="${H-2}" rx="10" ry="10" stroke="#000" fill="none"/>`,
+    t(x,y, d.brand || "BRAND", 20, "bold"), y+=24,
+    t(x,y, d.product || "Product name", 14), y+=18,
+    t(x,y, `Size: ${d.size || "-"}`, 14), y+=16,
+    `<line x1="${x}" y1="${y}" x2="${W-16}" y2="${y}" stroke="#000" stroke-width="0.7"/>`, y+=16,
+    t(x,y, "Composition:", 14, "bold"), y+=16,
+    t(x,y, d.composition || "e.g. 95% Cotton / 5% Elastane", 12), y+=16,
+    t(x,y, "Care:", 14, "bold"), y+=16,
+    ...careLines.map(s=>{ const out = t(x,y, s, 12); y+=14; return out; }),
+    y+=8, t(x,y, d.coo || "Made in …", 12, "bold"), y+=14,
+    t(x,y, `QR: curiosa.co.uk/p/${(d.product||"item").toLowerCase().replace(/\s+/g,"-")}`, 11),
+    `</svg>`
+  ];
+  return lines.join("");
+}
+
+export default function LabelPage() {
+  const [form, setForm] = useState<Form>({
+    brand: "CURIOSA",
+    product: "Essential Tee",
+    size: "M",
+    composition: "95% Cotton / 5% Elastane",
+    coo: "Made in Portugal",
+    preset: "Delicates 30°C"
+  });
+
+  const careLines = useMemo(() => PRESETS[form.preset] || [], [form.preset]);
+  const svg = useMemo(() => renderSVG(form, careLines), [form, careLines]);
+  const svgBlob = useMemo(() => new Blob([svg], { type: "image/svg+xml" }), [svg]);
+  const svgUrl = useMemo(() => URL.createObjectURL(svgBlob), [svgBlob]);
+
+  function update<K extends keyof Form>(k: K, v: string) {
+    setForm(prev => ({ ...prev, [k]: v }));
+  }
+
+  function downloadSVG() {
+    const a = document.createElement("a");
+    a.href = svgUrl;
+    a.download = `${(form.brand||"curiosa").toLowerCase()}-${(form.product||"label").toLowerCase().replace(/\s+/g,"-")}.svg`;
+    a.click();
+  }
+
+  return (
+    <main style={{minHeight:"100vh", background:"#111", color:"#f5d47e", padding:"20px"}}>
+      <div style={{maxWidth:1100, margin:"0 auto"}}>
+        <a href="/" style={{color:"#f5d47e"}}>← Back</a>
+        <h1 style={{margin:"10px 0 16px"}}>Curiosa — Label Maker</h1>
+
+        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:20}}>
+          <section style={{background:"#0b0b0b", border:"1px solid #3b3416", borderRadius:12, padding:16}}>
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}>
+              <label>Brand
+                <input value={form.brand} onChange={e=>update("brand", e.target.value)}
+                  placeholder="CURIOSA" style={inputStyle}/>
+              </label>
+              <label>Product
+                <input value={form.product} onChange={e=>update("product", e.target.value)}
+                  placeholder="Essential Tee" style={inputStyle}/>
+              </label>
+              <label>Size
+                <input value={form.size} onChange={e=>update("size", e.target.value)}
+                  placeholder="M" style={inputStyle}/>
+              </label>
+              <label>Country of Origin
+                <input value={form.coo} onChange={e=>update("coo", e.target.value)}
+                  placeholder="Made in Portugal" style={inputStyle}/>
+              </label>
+              <label style={{gridColumn:"1 / span 2"}}>Fibre Composition
+                <input value={form.composition} onChange={e=>update("composition", e.target.value)}
+                  placeholder="95% Cotton / 5% Elastane" style={inputStyle}/>
+              </label>
+              <label style={{gridColumn:"1 / span 2"}}>Care Preset
+                <select value={form.preset} onChange={e=>update("preset", e.target.value)} style={inputStyle}>
+                  {Object.keys(PRESETS).map(k=> <option key={k} value={k}>{k}</option>)}
+                </select>
+              </label>
+            </div>
+
+            <button onClick={downloadSVG}
+              style={{marginTop:16, background:"#f5d47e", color:"#111", padding:"10px 14px", borderRadius:8, fontWeight:700}}>
+              Download SVG
+            </button>
+          </section>
+
+          <section style={{background:"#0b0b0b", border:"1px solid #3b3416", borderRadius:12, padding:16}}>
+            <div style={{marginBottom:8, fontSize:14, color:"#e8d79a"}}>Live preview</div>
+            <div style={{background:"#fff", borderRadius:8, padding:8, display:"inline-block"}}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="Label preview" src={svgUrl} style={{width:380, height:240}} />
+            </div>
+            <div style={{marginTop:10, fontSize:12, color:"#c7b16a"}}>
+              This is a single label. We can add A4/Letter sheets next.
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  marginTop: 6,
+  padding: "10px 12px",
+  borderRadius: 8,
+  border: "1px solid #3b3416",
+  background: "#141414",
+  color: "#f7e8b8",
+  outline: "none"
+};
